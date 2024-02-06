@@ -1,0 +1,163 @@
+#include <iostream>
+#include <vector>
+#include <string>
+#include <ctime>
+
+using namespace std;
+
+// Struct to hold date information
+struct Date {
+    int day;
+    int month;
+    int year;
+};
+
+// Struct to represent a product
+struct Product {
+    string name;
+    double price;
+    int count;
+    Date expirationDate;
+    string outlet;
+};
+
+// Class for vending machine operations
+class VendingMachine {
+private:
+    vector<Product> products;
+
+    // Function to get the current date
+    Date getCurrentDate() {
+        time_t now = time(0);  // Get current system time
+        tm *currentTime = localtime(&now); // Convert system time to local time
+
+        // Extract day, month, and year from local time
+        Date currentDate;
+        currentDate.day = currentTime->tm_mday;
+        currentDate.month = currentTime->tm_mon + 1;
+        currentDate.year = currentTime->tm_year + 1900;
+
+        return currentDate;
+    }
+
+public:
+    // Function to add a new product to the vending machine
+    void addProduct() {
+        Product newProduct;
+        cout << "Enter product name: ";
+        cin >> newProduct.name;
+        cout << "Enter product price: ";
+        cin >> newProduct.price;
+        cout << "Enter product count: ";
+        cin >> newProduct.count;
+        cout << "Enter day of expiration : ";
+        cin >> newProduct.expirationDate.day;
+        cout << "Enter month of expiration : ";
+        cin >> newProduct.expirationDate.month;
+        cout << "Enter year of expiration : ";
+        cin >> newProduct.expirationDate.year;
+        cout << "Enter outlet: ";
+        cin >> newProduct.outlet;
+
+        products.push_back(newProduct);
+        cout << "Product added successfully!\n";
+    }
+
+    // Function to display available products
+    void displayAvailableProducts() {
+        cout << "Available Products:\n";
+        for (const auto &product : products) {
+            if (product.count > 0 && isAvailable(product)) {
+                cout << product.name << ", Price: " << product.price << endl;
+            }
+        }
+    }
+
+    // Function to check if a product is available based on expiration date and count
+    bool isAvailable(const Product &product) {
+        Date currentDate = getCurrentDate();
+
+        Date expirationDate = product.expirationDate;
+
+        // Check if the product has expired or there are no available items
+        if (expirationDate.year < currentDate.year ||
+            (expirationDate.year == currentDate.year && expirationDate.month < currentDate.month) ||
+            (expirationDate.year == currentDate.year && expirationDate.month == currentDate.month && expirationDate.day < currentDate.day)) {
+            return false; // The product has expired
+        }
+
+        return product.count > 0; // Check if there are available items
+    }
+
+    // Function to select a product
+    void selectProduct() {
+        displayAvailableProducts();
+        string selectedProduct;
+        cout << "Enter the name of the product you want: ";
+        cin >> selectedProduct;
+
+        // Iterate through products to find the selected product
+        for (auto &product : products) {
+            if (product.name == selectedProduct && product.count > 0 && isAvailable(product)) {
+                double depositedMoney;
+                cout << "Please deposit " << product.price << ": ";
+                cin >> depositedMoney;
+
+                if (depositedMoney >= product.price) {
+                    // Dispense product and handle change
+                    dispenseProduct(product);
+                    if (depositedMoney > product.price) {
+                        double change = depositedMoney - product.price;
+                        cout << "Change returned: $" << change << endl;
+                    }
+                    product.count--;
+                    return;
+                } else {
+                    cout << "Insufficient funds, Please deposit the correct amount\n";
+                    return;
+                }
+            }
+        }
+        cout << "Invalid selection or product not available.\n";
+    }
+
+    // Function to simulate dispensing a product
+    void dispenseProduct(const Product &product) {
+        // Simulate dispensing by printing
+        cout << "Dispensing from outlet: " << product.outlet << " - " << product.name << endl;
+    }
+};
+
+// Main function to interact with the vending machine
+int main() {
+    VendingMachine vendingMachine;
+    int mode;
+
+    // Loop for vending machine operation modes
+    do {
+        cout << "Select Mode: \n";
+        cout << "1. Programming Mode\n";
+        cout << "2. Operation Mode\n";
+        cout << "0. Exit\n";
+        cout << "Enter mode: ";
+        cin >> mode;
+
+        // Switch between different modes of operation
+        switch (mode) {
+            case 1:
+                vendingMachine.addProduct();
+                break;
+            case 2:
+                vendingMachine.selectProduct();
+                break;
+            case 0:
+                cout << "Exiting...\n";
+                break;
+            default:
+                cout << "Invalid choice!\n";
+                break;
+        }
+    } while (mode != 0);
+
+    return 0;
+}
